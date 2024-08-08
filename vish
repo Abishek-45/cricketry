@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cuckoo Hashing</title>
+  <style>
+    table {
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border: 1px solid black;
+    }
+  </style>
+</head>
+<body>
+  <h1>Cuckoo Hashing</h1>
+  <h2>Table 1</h2>
+  <table id="table1">
+    <tr>
+      <th>Index</th>
+      <th>Key</th>
+      <th>Value</th>
+    </tr>
+  </table>
+
+  <h2>Table 2</h2>
+  <table id="table2">
+    <tr>
+      <th>Index</th>
+      <th>Key</th>
+      <th>Value</th>
+    </tr>
+  </table>
+
+  <script>
+    // Cuckoo Hashing
+    const SIZE = 10; // Size of each hash table
+    const MAX_ITERATIONS = 20; // Maximum number of iterations
+
+    // Initialize hash tables
+    const table1 = new Array(SIZE).fill(null);
+    const table2 = new Array(SIZE).fill(null);
+
+    // Insert a key-value pair into the hash tables
+    function insert(key, value) {
+      let hash1 = hashFunction1(key);
+      let hash2 = hashFunction2(key);
+
+      // Check if the key already exists
+      if (table1[hash1] === key || table2[hash2] === key) {
+        console.log('Key already exists!');
+        return;
+      }
+
+      for (let i = 0; i < MAX_ITERATIONS; i++) {
+        // Insert into Table 1
+        if (table1[hash1] === null) {
+          table1[hash1] = { key, value };
+          displayTable('table1');
+          return;
+        }
+
+        // Insert into Table 2
+        if (table2[hash2] === null) {
+          table2[hash2] = { key, value };
+          displayTable('table2');
+          return;
+        }
+
+        // Evict existing key-value and rehash
+        let evictedEntry;
+        if (i % 2 === 0) {
+          evictedEntry = table1[hash1];
+          table1[hash1] = { key, value };
+          hash2 = hashFunction2(evictedEntry.key);
+        } else {
+          evictedEntry = table2[hash2];
+          table2[hash2] = { key, value };
+          hash1 = hashFunction1(evictedEntry.key);
+        }
+
+        key = evictedEntry.key;
+        value = evictedEntry.value;
+      }
+
+      // Maximum iterations reached
+      console.log('Maximum iterations reached! Unable to insert.');
+    }
+
+    // Display the hash table
+    function displayTable(tableId) {
+      const table = document.getElementById(tableId);
+      table.innerHTML = `
+        <tr>
+          <th>Index</th>
+          <th>Key</th>
+          <th>Value</th>
+        </tr>
+      `;
+      const data = tableId === 'table1' ? table1 : table2;
+      for (let i = 0; i < SIZE; i++) {
+        const entry = data[i];
+        let key = '-';
+        let value = '-';
+        if (entry !== null) {
+          key = entry.key;
+          value = entry.value;
+        }
+        table.innerHTML += `
+          <tr
